@@ -67,7 +67,7 @@
 <body>
 
   <div class="login-box">
-    <h2>ReliefAid Login</h2>
+    <h2>ReliefAid</h2>
     <form action="login.php" method="post">
       <input type="text" name="username" placeholder="Username" required>
       <input type="password" name="password" placeholder="Password" required>

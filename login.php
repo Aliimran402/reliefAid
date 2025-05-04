@@ -3,13 +3,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = $_POST['username'];
   $password = $_POST['password'];
 
-  $conn = new mysqli("localhost", "your_db_user", "your_db_password", "your_db_name");
+  $conn = new mysqli(hostname: "localhost", username: "db_user",password: "db_user_password", database: "ReliefAid");
 
   if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
   }
 
-  $stmt = $conn->prepare("SELECT password FROM users WHERE username = ?");
+  $stmt = $conn->prepare(query: "SELECT password FROM users WHERE username = ?");
   $stmt->bind_param("s", $username);
   $stmt->execute();
   $stmt->store_result();
@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_result($hashed_password);
     $stmt->fetch();
 
-    if (password_verify($password, $hashed_password)) {
+    if (password_verify(password: $password, hash: $hashed_password)) {
       echo "Login successful!";
       // You can start a session here and redirect to a dashboard
     } else {

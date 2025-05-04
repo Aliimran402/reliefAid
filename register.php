@@ -3,20 +3,20 @@ $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = $_POST['username'];
-  $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // hashed password
+  $password = password_hash(password: $_POST['password'], algo: PASSWORD_DEFAULT); // hashed password
   $address = $_POST['address'];
   $contact = $_POST['contact'];
 
-  $conn = new mysqli("localhost", "your_db_user", "your_db_password", "your_db_name");
+  $conn = new mysqli(hostname: "localhost", username: "db_user", password: "db_user_password", database: "reliefaid");
 
   if ($conn->connect_error) {
     $message = "Connection failed: " . $conn->connect_error;
   } else {
-    $stmt = $conn->prepare("INSERT INTO users (username, password, address, contact) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $username, $password, $address, $contact);
+    $stmt = $conn->prepare(query: "INSERT INTO users (username, password, address, contact) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $username, $password, $address, $contact); 
 
     if ($stmt->execute()) {
-      $message = "✅ Registration successful! <a href='login.html'>Login here</a>";
+      $message = "✅ Registration successful! <a href='index.php'>Login here</a>";
     } else {
       $message = "❌ Error: " . $stmt->error;
     }
@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <input type="text" name="contact" placeholder="Contact" required>
       <input type="submit" value="Register">
       <div class="link">
-        <p>Already have an account? <a href="login.html">Login here</a></p>
+        <p>Already have an account? <a href="Index.php">Login here</a></p>
       </div>
     </form>
   </div>
