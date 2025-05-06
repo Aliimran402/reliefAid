@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $address = $_POST['address'];
   $contact = $_POST['contact'];
 
-  $conn = new mysqli(hostname: "localhost", username: "db_user",database: "reliefaid");
+  $conn = new mysqli(hostname: "localhost", username: "root",database: "reliefaid");
 
   if ($conn->connect_error) {
     $message = "Connection failed: " . $conn->connect_error;

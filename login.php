@@ -5,7 +5,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = $_POST['username'];
   $password = $_POST['password'];
 
-  $sql = new mysqli(hostname: "localhost", username: "db_user",password: "db_user_password", database: "ReliefAid");
+  $sql = new mysqli(hostname: "localhost", username: "root",password: "db_user_password", database: "ReliefAid");
 
   if ($sql->connect_error) {
     die("Connection failed: " . $sql->connect_error);
