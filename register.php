@@ -7,12 +7,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $address = $_POST['address'];
   $contact = $_POST['contact'];
 
-  $conn = new mysqli(hostname: "localhost", username: "root",database: "reliefaid");
+  $sql = new mysqli(hostname: "localhost", username: "root",database: "reliefaid");
 
-  if ($conn->connect_error) {
-    $message = "Connection failed: " . $conn->connect_error;
+  if ($sql->connect_error) {
+    $message = "Connection failed: " . $sql->connect_error;
   } else {
-    $stmt = $conn->prepare(query: "INSERT INTO user ( username, password, address, contact) VALUES (?, ?, ?, ?)");
+    $stmt = $sql->prepare(query: "INSERT INTO user ( username, password, address, contact) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("ssss", $username, $password, $address, $contact); 
 
     if ($stmt->execute()) {
@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $stmt->close();
-    $conn->close();
+    $sql->close();
   }
 }
 ?>
