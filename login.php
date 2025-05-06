@@ -1,15 +1,17 @@
 <?php
+require_once('DBconnect.php');
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = $_POST['username'];
   $password = $_POST['password'];
 
-  $conn = new mysqli(hostname: "localhost", username: "db_user",password: "db_user_password", database: "ReliefAid");
+  $sql = new mysqli(hostname: "localhost", username: "db_user",password: "db_user_password", database: "ReliefAid");
 
-  if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+  if ($sql->connect_error) {
+    die("Connection failed: " . $sql->connect_error);
   }
 
-  $stmt = $conn->prepare(query: "SELECT password FROM users WHERE username = ?");
+  $stmt = $sql->prepare(query: "SELECT password FROM user WHERE username = ?");
   $stmt->bind_param("s", $username);
   $stmt->execute();
   $stmt->store_result();
@@ -29,6 +31,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
 
   $stmt->close();
-  $conn->close();
+  $sql->close();
 }
 ?>

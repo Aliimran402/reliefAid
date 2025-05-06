@@ -3,16 +3,16 @@ $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = $_POST['username'];
-  $password = password_hash(password: $_POST['password'], algo: PASSWORD_DEFAULT); // hashed password
+  $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
   $address = $_POST['address'];
   $contact = $_POST['contact'];
 
-  $conn = new mysqli(hostname: "localhost", username: "db_user", password: "db_user_password", database: "reliefaid");
+  $conn = new mysqli(hostname: "localhost", username: "db_user",database: "reliefaid");
 
   if ($conn->connect_error) {
     $message = "Connection failed: " . $conn->connect_error;
   } else {
-    $stmt = $conn->prepare(query: "INSERT INTO users (username, password, address, contact) VALUES (?, ?, ?, ?)");
+    $stmt = $conn->prepare(query: "INSERT INTO user ( username, password, address, contact) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("ssss", $username, $password, $address, $contact); 
 
     if ($stmt->execute()) {
