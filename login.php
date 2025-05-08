@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (password_verify(password: $password, hash: $hashed_password)) {
       echo "Login successful!";
-      //admin_dashboard
+      //use dashboard
     } else {
       echo "Incorrect password.";
     }
