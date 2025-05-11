@@ -2,8 +2,10 @@
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = $_POST['username'];
   $password = $_POST['password'];
+  
+  $conn = new mysqli("localhost", "root", "", "ReliefAid");
 
-  $conn = new mysqli( "localhost","db_user","db_user_password", "ReliefAid");
+  //$conn = new mysqli( "localhost","db_user","db_user_password", "ReliefAid");
 
   if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -21,7 +23,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (password_verify(password: $password, hash: $hashed_password)) {
       echo "Login successful!" ;
       header("Location: Home.php");
-      // You can start a session here and redirect to a dashboard
     } else {
       echo "Incorrect password.";
     }
