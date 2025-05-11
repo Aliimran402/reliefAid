@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   if ($sql->connect_error) {
     $message = "Connection failed: " . $sql->connect_error;
   } else {
-    $stmt = $sql->prepare(query: "INSERT INTO user ( username, password, address, contact) VALUES (?, ?, ?, ?)");
+    $stmt = $sql->prepare(query: "INSERT INTO user (username, password, address, contact) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("ssss", $username, $password, $address, $contact); 
 
     if ($stmt->execute()) {

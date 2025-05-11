@@ -1,18 +1,16 @@
 <?php
-require_once('DBconnect.php');
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = $_POST['username'];
   $password = $_POST['password'];
 
-  $sql = new mysqli(hostname: "localhost", username: "root",password: "db_user_password", database: "ReliefAid");
+  $conn = new mysqli( "localhost","db_user","db_user_password", "ReliefAid");
 
-  if ($sql->connect_error) {
-    die("Connection failed: " . $sql->connect_error);
+  if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
   }
 
-  $stmt = $sql->prepare(query: "SELECT password FROM user WHERE username = ?");
-  $stmt->bind_param("s", $username);
+  $stmt = $conn->prepare(query: "SELECT password FROM user WHERE username = ?");
+  $stmt->bind_param( "s",  $username);
   $stmt->execute();
   $stmt->store_result();
 
@@ -21,8 +19,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->fetch();
 
     if (password_verify(password: $password, hash: $hashed_password)) {
-      echo "Login successful!";
-      //use dashboard
+      echo "Login successful!" ;
+      header("Location: Home.php");
+      // You can start a session here and redirect to a dashboard
     } else {
       echo "Incorrect password.";
     }
@@ -31,6 +30,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
 
   $stmt->close();
-  $sql->close();
+  $conn->close();
 }
 ?>
