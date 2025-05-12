@@ -47,17 +47,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       width: 400px;
       margin: auto;
     }
-    input[type="number"], input[type="submit"] {
+    input[type="number"] {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-    input[type="submit"] {
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .button-group input[type="submit"] {
+      flex: 1;
+      padding: 12px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    .donate-btn {
       background-color: #28a745;
       color: white;
-      border: none;
+    }
+    .home-btn {
+      background-color: #007BFF;
+      color: white;
     }
     .message {
       color: #cc0000;
@@ -72,7 +87,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <?php if ($message) echo "<p class='message'>$message</p>"; ?>
   <form method="post">
     <input type="number" name="amount" placeholder="Enter amount in Taka" min="20" required>
-    <input type="submit" value="Donate">
+    <div class="button-group">
+      <input type="submit" value="Donate" class="donate-btn">
+      <input type="button" value="Home" class="home-btn" onclick="window.location.href='Home.php'">
+    </div>
   </form>
 </div>
 

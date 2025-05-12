@@ -51,6 +51,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       color: white;
       border: none;
     }
+    .home-btn {
+      display: inline-block;
+      background-color: #6c757d;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
     .message {
       color: #cc0000;
       margin-bottom: 15px;
@@ -69,6 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <input type="text" name="zip" placeholder="ZIP Code of Location" required>
     <input type="submit" value="Register as Volunteer">
   </form>
+  <a href="home.php" class="home-btn">Back to Home</a>
 </div>
 
 </body>
