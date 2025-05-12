@@ -9,12 +9,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $zip = $_POST['zip'];
   $item_id = NULL; // You can assign based on disaster needs
 
-  $stmt = $conn->prepare("INSERT INTO Volunteers (NID, name, contact, item_id, zip) VALUES (?, ?, ?, ?, ?)");
-  $stmt->bind_param("sssis", $nid, $name, $contact, $item_id, $zip);
-  if ($stmt->execute()) {
+  // Start transaction
+  $conn->begin_transaction();
+
+  try {
+    // First check if location exists
+    $stmt = $conn->prepare("SELECT zip FROM Location WHERE zip = ?");
+    $stmt->bind_param("s", $zip);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows == 0) {
+      // Location doesn't exist, create it with default values
+      $stmt = $conn->prepare("INSERT INTO Location (zip, name, population) VALUES (?, ?, ?)");
+      $location_name = "Area " . $zip; // Default name
+      $default_population = 0; // Default population
+      $stmt->bind_param("ssi", $zip, $location_name, $default_population);
+      $stmt->execute();
+    }
+
+    // Now insert the volunteer
+    $stmt = $conn->prepare("INSERT INTO Volunteers (NID, name, contact, item_id, zip) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssis", $nid, $name, $contact, $item_id, $zip);
+    $stmt->execute();
+
+    $conn->commit();
     $message = "✅ Successfully registered as a volunteer!";
-  } else {
-    $message = "❌ Error: " . $stmt->error;
+  } catch (Exception $e) {
+    $conn->rollback();
+    $message = "❌ Error: " . $e->getMessage();
   }
   $stmt->close();
 }

@@ -10,24 +10,47 @@ $message = "";
 
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  if (isset($_POST['add_disaster'])) {
+  if (isset($_POST['add_disaster_location'])) {
     $date = $_POST['date'];
     $type = $_POST['type'];
-    $stmt = $conn->prepare("INSERT INTO Disaster (date, type) VALUES (?, ?)");
-    $stmt->bind_param("ss", $date, $type);
-    $stmt->execute();
-    $message = "✅ Disaster added.";
-    $stmt->close();
-  }
-
-  if (isset($_POST['add_location'])) {
     $zip = $_POST['zip'];
     $name = $_POST['name'];
     $population = $_POST['population'];
-    $stmt = $conn->prepare("INSERT INTO Location (zip, name, population) VALUES (?, ?, ?)");
-    $stmt->bind_param("ssi", $zip, $name, $population);
-    $stmt->execute();
-    $message = "✅ Location added.";
+    
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+      // First check if location exists
+      $stmt = $conn->prepare("SELECT zip FROM Location WHERE zip = ?");
+      $stmt->bind_param("s", $zip);
+      $stmt->execute();
+      $result = $stmt->get_result();
+      
+      if ($result->num_rows == 0) {
+        // Location doesn't exist, insert it
+        $stmt = $conn->prepare("INSERT INTO Location (zip, name, population) VALUES (?, ?, ?)");
+        $stmt->bind_param("ssi", $zip, $name, $population);
+        $stmt->execute();
+      }
+      
+      // Insert into Disaster table
+      $stmt = $conn->prepare("INSERT INTO Disaster (date, type) VALUES (?, ?)");
+      $stmt->bind_param("ss", $date, $type);
+      $stmt->execute();
+      $disaster_id = $conn->insert_id;
+      
+      // Insert into Occured table
+      $stmt = $conn->prepare("INSERT INTO Occured (disaster_id, zip) VALUES (?, ?)");
+      $stmt->bind_param("is", $disaster_id, $zip);
+      $stmt->execute();
+      
+      $conn->commit();
+      $message = "✅ Disaster and location added successfully.";
+    } catch (Exception $e) {
+      $conn->rollback();
+      $message = "❌ Error: " . $e->getMessage();
+    }
     $stmt->close();
   }
 
@@ -54,10 +77,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   if (isset($_POST['delete_disaster'])) {
     $id = $_POST['disaster_id'];
-    $stmt = $conn->prepare("DELETE FROM Disaster WHERE disaster_id = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $message = "🗑 Disaster deleted.";
+    
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+      // Delete from Occured table first
+      $stmt = $conn->prepare("DELETE FROM Occured WHERE disaster_id = ?");
+      $stmt->bind_param("i", $id);
+      $stmt->execute();
+      
+      // Then delete from Disaster table
+      $stmt = $conn->prepare("DELETE FROM Disaster WHERE disaster_id = ?");
+      $stmt->bind_param("i", $id);
+      $stmt->execute();
+      
+      $conn->commit();
+      $message = "🗑 Disaster and related records deleted successfully.";
+    } catch (Exception $e) {
+      $conn->rollback();
+      $message = "❌ Error: " . $e->getMessage();
+    }
     $stmt->close();
   }
 }
@@ -121,21 +161,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <h1>Welcome, Admin</h1>
 <?php if ($message) echo "<p class='message'>$message</p>"; ?>
 
-<!-- Add Disaster -->
+<!-- Add Disaster and Location -->
 <form method="post">
-  <h2>Add Disaster</h2>
-  <input type="date" name="date" required>
+  <h2>Add Disaster and Location</h2>
+  <input type="date" name="date" placeholder="Disaster Date" required>
   <input type="text" name="type" placeholder="Disaster type (e.g. flood)" required>
-  <input type="submit" name="add_disaster" value="Add Disaster">
-</form>
-
-<!-- Add Location -->
-<form method="post">
-  <h2>Add Location</h2>
   <input type="text" name="zip" placeholder="ZIP Code" required>
   <input type="text" name="name" placeholder="Location Name" required>
   <input type="number" name="population" placeholder="Population" required>
-  <input type="submit" name="add_location" value="Add Location">
+  <input type="submit" name="add_disaster_location" value="Add Disaster and Location">
 </form>
 
 <!-- Add Storage Item -->
@@ -163,24 +197,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </form>
 
 <!-- View Data -->
-<h2>Current Disasters</h2>
+<h2>Current Disasters and Locations</h2>
 <table>
-  <tr><th>ID</th><th>Date</th><th>Type</th></tr>
+  <tr>
+    <th>Disaster ID</th>
+    <th>Date</th>
+    <th>Type</th>
+    <th>Location ZIP</th>
+    <th>Location Name</th>
+    <th>Population</th>
+  </tr>
   <?php
-  $res = $conn->query("SELECT * FROM Disaster");
-  while ($row = $res->fetch_assoc()) {
-    echo "<tr><td>{$row['disaster_id']}</td><td>{$row['date']}</td><td>{$row['type']}</td></tr>";
-  }
-  ?>
-</table>
-
-<h2>Current Locations</h2>
-<table>
-  <tr><th>ZIP</th><th>Name</th><th>Population</th></tr>
-  <?php
-  $res = $conn->query("SELECT * FROM Location");
-  while ($row = $res->fetch_assoc()) {
-    echo "<tr><td>{$row['zip']}</td><td>{$row['name']}</td><td>{$row['population']}</td></tr>";
+  $query = "SELECT d.disaster_id, d.date, d.type, l.zip, l.name, l.population 
+            FROM Disaster d 
+            INNER JOIN Occured o ON d.disaster_id = o.disaster_id 
+            INNER JOIN Location l ON o.zip = l.zip
+            ORDER BY d.date DESC";
+  $res = $conn->query($query);
+  if ($res) {
+    while ($row = $res->fetch_assoc()) {
+      echo "<tr>
+        <td>{$row['disaster_id']}</td>
+        <td>{$row['date']}</td>
+        <td>{$row['type']}</td>
+        <td>{$row['zip']}</td>
+        <td>{$row['name']}</td>
+        <td>{$row['population']}</td>
+      </tr>";
+    }
+  } else {
+    echo "<tr><td colspan='6'>Error fetching data: " . $conn->error . "</td></tr>";
   }
   ?>
 </table>
