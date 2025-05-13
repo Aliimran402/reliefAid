@@ -158,8 +158,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
 
-<h1>Welcome, Admin</h1>
+<header style="display: flex; justify-content: space-between; align-items: center; background-color: #007BFF; color: white; padding: 15px 30px; margin: -20px -20px 20px -20px;">
+  <h1 style="margin: 0;">Admin Panel</h1>
+  <a href="index.php" style="background-color: white; color: #007BFF; padding: 8px 15px; border-radius: 5px; text-decoration: none; font-weight: bold;">Logout</a>
+</header>
+
 <?php if ($message) echo "<p class='message'>$message</p>"; ?>
+
+<?php
+// Calculate total money raised
+$result = $conn->query("SELECT SUM(amount) as total FROM transaction");
+$row = $result->fetch_assoc();
+$total_money = $row['total'] ?? 0;
+
+// Calculate total money spent
+$result = $conn->query("SELECT SUM(price * quantity) as total FROM Storage");
+$row = $result->fetch_assoc();
+$money_spent = $row['total'] ?? 0;
+
+// Calculate remaining funds
+$fund_remaining = $total_money - $money_spent;
+?>
+
+<div style="background: white; padding: 20px; margin-bottom: 30px; border-radius: 10px; box-shadow: 0 0 10px #ccc;">
+  <h2>Financial Overview</h2>
+  <p><strong>Total Money Raised:</strong> ৳<?php echo number_format($total_money, 2); ?></p>
+  <p><strong>Money Spent:</strong> ৳<?php echo number_format($money_spent, 2); ?></p>
+  <p><strong>Fund Remaining:</strong> ৳<?php echo number_format($fund_remaining, 2); ?></p>
+</div>
 
 <!-- Add Disaster and Location -->
 <form method="post">

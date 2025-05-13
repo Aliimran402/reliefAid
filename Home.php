@@ -1,13 +1,17 @@
 <?php
 require_once('DBconnect.php');
 
-// Get total people helped (sum of population from locations)
-$result = $conn->query("SELECT SUM(population) as total FROM Location");
+// Get total people helped (sum of population from locations with current disasters)
+$result = $conn->query("
+    SELECT SUM(l.population) as total 
+    FROM Location l 
+    INNER JOIN Occured o ON l.zip = o.zip 
+    INNER JOIN Disaster d ON o.disaster_id = d.disaster_id
+");
 $row = $result->fetch_assoc();
 $people_helped = $row['total'] ?? 0;
 
 // Get total money (sum of price * quantity from storage)
-//$result = $conn->query("SELECT SUM(price * quantity) as total FROM Storage");
 $result = $conn->query("SELECT SUM(amount) as total FROM transaction");
 $row = $result->fetch_assoc();
 $total_money = $row['total'] ?? 0;
@@ -26,23 +30,20 @@ $locations_helped = $row['total'] ?? 0;
 $disasters = [];
 $result = $conn->query("
     SELECT d.*, 
-           COUNT(v.NID) as volunteer_count,
-           (SELECT SUM(s.price * s.quantity) FROM Storage s) as total_spent,
-           (SELECT SUM(s.price * s.quantity) FROM Storage s) as needed_amount
+           l.name as location_name
     FROM Disaster d
-    LEFT JOIN Volunteers v ON v.zip IN (SELECT zip FROM Location)
+    LEFT JOIN Occured o ON d.disaster_id = o.disaster_id
+    LEFT JOIN Location l ON o.zip = l.zip
     GROUP BY d.disaster_id
     ORDER BY d.date DESC
 ");
 
 while ($row = $result->fetch_assoc()) {
-    $disasters[] = [
-        'image' => 'https://via.placeholder.com/600x200?text=' . urlencode($row['type']),
-        'summary' => $row['type'] . ' disaster on ' . $row['date'],
-        'needed' => $row['needed_amount'] ?? 0,
-        'spent' => $row['total_spent'] ?? 0,
-        'volunteers' => $row['volunteer_count'] ?? 0
-    ];
+    if (!empty($row['location_name'])) {
+        $disasters[] = [
+            'summary' => $row['type'] . ' disaster on ' . $row['date'] . ' in ' . $row['location_name']
+        ];
+    }
 }
 ?>
 
@@ -130,11 +131,6 @@ while ($row = $result->fetch_assoc()) {
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    .disaster img {
-      width: 100%;
-      height: auto;
-    }
-
     .disaster-info {
       padding: 20px;
       text-align: left;
@@ -156,7 +152,7 @@ while ($row = $result->fetch_assoc()) {
 
 <header>
   <h1>ReliefAid</h1>
-  <a href="index.php">Login</a>
+  <a href="index.php">Logout</a>
 </header>
 
 <main>
@@ -168,7 +164,7 @@ while ($row = $result->fetch_assoc()) {
   <div class="stats">
     <div class="stat-card">
       <h3><?php echo number_format($people_helped); ?></h3>
-      <p>People Helped</p>
+      <p>People in Need</p>
     </div>
     <div class="stat-card">
       <h3>৳<?php echo number_format($total_money, 2); ?></h3>
@@ -180,7 +176,7 @@ while ($row = $result->fetch_assoc()) {
     </div>
     <div class="stat-card">
       <h3><?php echo number_format($locations_helped); ?></h3>
-      <p>Locations Helped</p>
+      <p>Affected Areas</p>
     </div>
   </div>
 
@@ -191,12 +187,8 @@ while ($row = $result->fetch_assoc()) {
     <?php else: ?>
       <?php foreach ($disasters as $disaster): ?>
         <div class="disaster">
-          <img src="<?php echo $disaster['image']; ?>" alt="Disaster Image">
           <div class="disaster-info">
             <p><strong>Summary:</strong> <?php echo $disaster['summary']; ?></p>
-            <p><strong>Money Needed:</strong> ৳<?php echo number_format($disaster['needed'], 2); ?></p>
-            <p><strong>Money Spent:</strong> ৳<?php echo number_format($disaster['spent'], 2); ?></p>
-            <p><strong>Volunteers Assigned:</strong> <?php echo $disaster['volunteers']; ?></p>
           </div>
         </div>
       <?php endforeach; ?>
