@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $stmt->execute();
       $disaster_id = $conn->insert_id;
       
-      // Insert into Occured table
+      
       $stmt = $conn->prepare("INSERT INTO Occured (disaster_id, zip) VALUES (?, ?)");
       $stmt->bind_param("is", $disaster_id, $zip);
       $stmt->execute();
