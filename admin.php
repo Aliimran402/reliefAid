@@ -8,7 +8,6 @@ if (!isset($_SESSION['username']) || $_SESSION['username'] !== 'LeoMessi_admin')
 
 $message = "";
 
-// Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   if (isset($_POST['add_disaster_location'])) {
     $date = $_POST['date'];
@@ -17,24 +16,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST['name'];
     $population = $_POST['population'];
     
-    // Start transaction
+
     $conn->begin_transaction();
     
     try {
-      // First check if location exists
+      
       $stmt = $conn->prepare("SELECT zip FROM Location WHERE zip = ?");
       $stmt->bind_param("s", $zip);
       $stmt->execute();
       $result = $stmt->get_result();
       
       if ($result->num_rows == 0) {
-        // Location doesn't exist, insert it
         $stmt = $conn->prepare("INSERT INTO Location (zip, name, population) VALUES (?, ?, ?)");
         $stmt->bind_param("ssi", $zip, $name, $population);
         $stmt->execute();
       }
       
-      // Insert into Disaster table
       $stmt = $conn->prepare("INSERT INTO Disaster (date, type) VALUES (?, ?)");
       $stmt->bind_param("ss", $date, $type);
       $stmt->execute();
@@ -78,16 +75,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   if (isset($_POST['delete_disaster'])) {
     $id = $_POST['disaster_id'];
     
-    // Start transaction
+
     $conn->begin_transaction();
     
     try {
-      // Delete from Occured table first
       $stmt = $conn->prepare("DELETE FROM Occured WHERE disaster_id = ?");
       $stmt->bind_param("i", $id);
       $stmt->execute();
       
-      // Then delete from Disaster table
       $stmt = $conn->prepare("DELETE FROM Disaster WHERE disaster_id = ?");
       $stmt->bind_param("i", $id);
       $stmt->execute();
@@ -185,17 +180,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <?php if ($message) echo "<p class='message'>$message</p>"; ?>
 
 <?php
-// Calculate total money raised
 $result = $conn->query("SELECT SUM(amount) as total FROM transaction");
 $row = $result->fetch_assoc();
 $total_money = $row['total'] ?? 0;
 
-// Calculate total money spent
 $result = $conn->query("SELECT SUM(price * quantity) as total FROM Storage");
 $row = $result->fetch_assoc();
 $money_spent = $row['total'] ?? 0;
 
-// Calculate remaining funds
 $fund_remaining = $total_money - $money_spent;
 ?>
 
@@ -206,7 +198,6 @@ $fund_remaining = $total_money - $money_spent;
   <p><strong>Fund Remaining:</strong> ৳<?php echo number_format($fund_remaining, 2); ?></p>
 </div>
 
-<!-- Add Disaster and Location -->
 <form method="post">
   <h2>Add Disaster and Location</h2>
   <input type="date" name="date" placeholder="Disaster Date" required>
@@ -217,7 +208,7 @@ $fund_remaining = $total_money - $money_spent;
   <input type="submit" name="add_disaster_location" value="Add Disaster and Location">
 </form>
 
-<!-- Add Storage Item -->
+
 <form method="post">
   <h2>Add Storage Item</h2>
   <input type="number" name="quantity" placeholder="Quantity" required>
@@ -225,7 +216,7 @@ $fund_remaining = $total_money - $money_spent;
   <input type="submit" name="add_storage" value="Add Storage Item">
 </form>
 
-<!-- Assign Volunteer -->
+
 <form method="post">
   <h2>Assign Volunteer to Item and Location</h2>
   <input type="text" name="nid" placeholder="Volunteer NID" required>
@@ -234,21 +225,21 @@ $fund_remaining = $total_money - $money_spent;
   <input type="submit" name="assign_volunteer" value="Assign Volunteer">
 </form>
 
-<!-- Delete Disaster -->
+
 <form method="post">
   <h2>Delete Disaster</h2>
   <input type="number" name="disaster_id" placeholder="Disaster ID" required>
   <input type="submit" name="delete_disaster" value="Delete Disaster" style="background: #dc3545;">
 </form>
 
-<!-- Delete User -->
+
 <form method="post">
   <h2>Delete User</h2>
   <input type="number" name="user_id" placeholder="User ID" required>
   <input type="submit" name="delete_user" value="Delete User" style="background: #dc3545;">
 </form>
 
-<!-- View Data -->
+
 <h2>Current Disasters and Locations</h2>
 <table>
   <tr>
