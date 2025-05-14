@@ -4,17 +4,17 @@ $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $amount = $_POST['amount'];
-  $u_id = 1; // Use logged-in user's ID in a real system
+  $u_id = 1;
   $item_id = NULL;
+  $time = date('Y-m-d H:i:s');
 
-  // Insert into Storage if needed (this example skips it)
   $stmt1 = $conn->prepare("INSERT INTO transaction (amount, item_id) VALUES (?, ?)");
   $stmt1->bind_param("di", $amount, $item_id);
   if ($stmt1->execute()) {
     $trans_id = $stmt1->insert_id;
 
-    $stmt2 = $conn->prepare("INSERT INTO User_donates (u_id, trans_id) VALUES (?, ?)");
-    $stmt2->bind_param("ii", $u_id, $trans_id);
+    $stmt2 = $conn->prepare("INSERT INTO User_donates (u_id, trans_id, time) VALUES (?, ?, ?)");
+    $stmt2->bind_param("iis", $u_id, $trans_id, $time);
     if ($stmt2->execute()) {
       $message = "✅ Thank you for your donation!";
     } else {

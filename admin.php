@@ -100,6 +100,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $stmt->close();
   }
+
+  if (isset($_POST['delete_user'])) {
+    $u_id = $_POST['user_id'];
+    
+    try {
+      $stmt = $conn->prepare("DELETE FROM user WHERE u_id = ?");
+      $stmt->bind_param("i", $u_id);
+      $stmt->execute();
+      
+      if ($stmt->affected_rows > 0) {
+        $message = "🗑 User deleted successfully.";
+      } else {
+        $message = "❌ No user found with the given ID.";
+      }
+    } catch (Exception $e) {
+      $message = "❌ Error: " . $e->getMessage();
+    }
+    $stmt->close();
+  }
 }
 ?>
 
@@ -222,6 +241,13 @@ $fund_remaining = $total_money - $money_spent;
   <input type="submit" name="delete_disaster" value="Delete Disaster" style="background: #dc3545;">
 </form>
 
+<!-- Delete User -->
+<form method="post">
+  <h2>Delete User</h2>
+  <input type="number" name="user_id" placeholder="User ID" required>
+  <input type="submit" name="delete_user" value="Delete User" style="background: #dc3545;">
+</form>
+
 <!-- View Data -->
 <h2>Current Disasters and Locations</h2>
 <table>
@@ -268,19 +294,80 @@ $fund_remaining = $total_money - $money_spent;
   ?>
 </table>
 
-<h2>Volunteers</h2>
+<h2>Assigned Volunteers</h2>
 <table>
-  <tr><th>NID</th><th>Name</th><th>Contact</th><th>Item ID</th><th>Location ZIP</th></tr>
+  <tr>
+    <th>NID</th>
+    <th>Name</th>
+    <th>Contact</th>
+    <th>Item ID</th>
+    <th>Location ZIP</th>
+  </tr>
   <?php
-  $res = $conn->query("SELECT * FROM Volunteers");
-  while ($row = $res->fetch_assoc()) {
-    echo "<tr>
-      <td>{$row['NID']}</td>
-      <td>{$row['name']}</td>
-      <td>{$row['contact']}</td>
-      <td>{$row['item_id']}</td>
-      <td>{$row['zip']}</td>
-    </tr>";
+  $query = "SELECT * FROM Volunteers WHERE item_id IS NOT NULL AND zip IS NOT NULL";
+  $res = $conn->query($query);
+  if ($res) {
+    while ($row = $res->fetch_assoc()) {
+      echo "<tr>
+        <td>{$row['NID']}</td>
+        <td>{$row['name']}</td>
+        <td>{$row['contact']}</td>
+        <td>{$row['item_id']}</td>
+        <td>{$row['zip']}</td>
+      </tr>";
+    }
+  } else {
+    echo "<tr><td colspan='5'>Error fetching assigned volunteers: " . $conn->error . "</td></tr>";
+  }
+  ?>
+</table>
+
+<h2>Registered Volunteers</h2>
+<table>
+  <tr>
+    <th>NID</th>
+    <th>Name</th>
+    <th>Contact</th>
+  </tr>
+  <?php
+  $query = "SELECT NID, name, contact FROM Volunteers WHERE item_id IS NULL OR zip IS NULL";
+  $res = $conn->query($query);
+  if ($res) {
+    while ($row = $res->fetch_assoc()) {
+      echo "<tr>
+        <td>{$row['NID']}</td>
+        <td>{$row['name']}</td>
+        <td>{$row['contact']}</td>
+      </tr>";
+    }
+  } else {
+    echo "<tr><td colspan='3'>Error fetching registered volunteers: " . $conn->error . "</td></tr>";
+  }
+  ?>
+</table>
+
+<h2>User Information</h2>
+<table>
+  <tr>
+    <th>User ID</th>
+    <th>Username</th>
+    <th>Address</th>
+    <th>Contact</th>
+  </tr>
+  <?php
+  $query = "SELECT u_id, username, address, contact FROM user WHERE u_id IS NOT NULL AND username IS NOT NULL AND address IS NOT NULL AND contact IS NOT NULL";
+  $res = $conn->query($query);
+  if ($res) {
+    while ($row = $res->fetch_assoc()) {
+      echo "<tr>
+        <td>{$row['u_id']}</td>
+        <td>{$row['username']}</td>
+        <td>{$row['address']}</td>
+        <td>{$row['contact']}</td>
+      </tr>";
+    }
+  } else {
+    echo "<tr><td colspan='4'>Error fetching user data: " . $conn->error . "</td></tr>";
   }
   ?>
 </table>
